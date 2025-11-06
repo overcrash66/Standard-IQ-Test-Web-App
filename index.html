@@ -7,15 +7,20 @@
     <!-- Bootstrap 5 for intuitive UI -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- jsPDF for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', 'Noto Sans Arabic', 'Roboto', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             padding: 20px;
+            direction: ltr;
+        }
+        [dir="rtl"] {
+            direction: rtl;
+            text-align: right;
         }
         .container {
             max-width: 800px;
@@ -43,6 +48,9 @@
             padding: 0.75rem 1rem;
             border-radius: 12px;
             transition: all 0.2s;
+        }
+        [dir="rtl"] .option-btn {
+            text-align: right;
         }
         .option-btn:hover {
             background-color: #e0e7ff;
@@ -87,48 +95,66 @@
             border-radius: 8px;
         }
         .hidden { display: none; }
+        .lang-selector {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+        }
+        [dir="rtl"] .lang-selector {
+            right: auto;
+            left: 15px;
+        }
     </style>
 </head>
 <body>
+    <div class="lang-selector">
+        <select id="langSelect" class="form-select form-select-sm w-auto" onchange="changeLanguage(this.value)">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="ar">العربية</option>
+        </select>
+    </div>
+
     <div class="container mt-5">
         <!-- Welcome Screen -->
         <div id="welcomeScreen" class="card">
             <div class="card-header">
-                <h3>Standard IQ Assessment</h3>
+                <h3 data-i18n="title">Standard IQ Assessment</h3>
             </div>
             <div class="card-body text-center p-5">
-                <h5 class="mb-4">Welcome to a Scientifically Valid IQ Test</h5>
-                <p class="text-muted mb-4">
+                <h5 class="mb-4" data-i18n="welcome">Welcome to a Scientifically Valid IQ Test</h5>
+                <p class="text-muted mb-4" data-i18n="description">
                     This test is based on Raven's Progressive Matrices principles and includes 
                     verbal, numerical, and spatial reasoning questions. It consists of <strong>30 questions</strong> 
                     and takes about <strong>25-30 minutes</strong>.
                 </p>
-                <p class="text-muted mb-4">
+                <p class="text-muted mb-4" data-i18n="results">
                     Your score will be compared to age-matched norms (16–64 years). 
                     Results include a detailed PDF report.
                 </p>
                 <div class="row mb-4">
                     <div class="col-md-6 mb-3">
-                        <label for="age" class="form-label">Your Age</label>
+                        <label for="age" class="form-label" data-i18n="ageLabel">Your Age</label>
                         <input type="number" id="age" class="form-control" min="16" max="64" placeholder="e.g., 28" required>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Gender (Optional)</label>
+                        <label class="form-label" data-i18n="genderLabel">Gender (Optional)</label>
                         <select class="form-select">
-                            <option>Male</option>
-                            <option>Female</option>
-                            <option>Prefer not to say</option>
+                            <option data-i18n="male">Male</option>
+                            <option data-i18n="female">Female</option>
+                            <option data-i18n="preferNot">Prefer not to say</option>
                         </select>
                     </div>
                 </div>
-                <button onclick="startTest()" class="btn btn-primary btn-lg">Start Test</button>
+                <button onclick="startTest()" class="btn btn-primary btn-lg" data-i18n="startBtn">Start Test</button>
             </div>
         </div>
 
         <!-- Test Screen -->
         <div id="testScreen" class="card hidden">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Question <span id="currentQ">1</span> of 30</span>
+                <span data-i18n="questionOf">Question <span id="currentQ">1</span> of 30</span>
                 <span id="timer">25:00</span>
             </div>
             <div class="question-container">
@@ -139,8 +165,8 @@
                 <div id="questionImage" class="mb-4 text-center"></div>
                 <div id="optionsContainer" class="mb-4"></div>
                 <div class="d-flex justify-content-between">
-                    <button id="prevBtn" onclick="prevQuestion()" class="btn btn-outline-secondary" disabled>Previous</button>
-                    <button id="nextBtn" onclick="nextQuestion()" class="btn btn-primary">Next</button>
+                    <button id="prevBtn" onclick="prevQuestion()" class="btn btn-outline-secondary" disabled data-i18n="prevBtn">Previous</button>
+                    <button id="nextBtn" onclick="nextQuestion()" class="btn btn-primary" data-i18n="nextBtn">Next</button>
                 </div>
             </div>
         </div>
@@ -148,285 +174,240 @@
         <!-- Result Screen -->
         <div id="resultScreen" class="hidden">
             <div class="result-card text-center">
-                <h3>Your IQ Assessment Results</h3>
+                <h3 data-i18n="resultsTitle">Your IQ Assessment Results</h3>
                 <div class="iq-score" id="iqScore">—</div>
                 <p class="percentile" id="percentileText"></p>
                 <p class="text-muted" id="interpretation"></p>
-                <button onclick="generatePDF()" class="btn btn-primary mt-3">Download PDF Report</button>
-                <button onclick="restartTest()" class="btn btn-outline-secondary mt-3 ms-2">Retake Test</button>
+                <button onclick="generatePDF()" class="btn btn-primary mt-3" data-i18n="downloadBtn">Download PDF Report</button>
+                <button onclick="restartTest()" class="btn btn-outline-secondary mt-3 ms-2" data-i18n="retakeBtn">Retake Test</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Test Data: 30 questions (mix of Raven-style, verbal, numerical, spatial)
-        const questions = [
-            // Raven-style pattern (1-10)
-            {
-                type: "pattern",
-                question: "Which figure completes the pattern?",
-                options: ["A", "B", "C", "D", "E", "F"],
-                correct: 2,
-                difficulty: 1,
-                imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-1-1024x576.jpg.webp"
+        // Language translations
+        const translations = {
+            en: {
+                title: "Standard IQ Assessment",
+                welcome: "Welcome to a Scientifically Valid IQ Test",
+                description: "This test is based on Raven's Progressive Matrices principles and includes verbal, numerical, and spatial reasoning questions. It consists of <strong>30 questions</strong> and takes about <strong>25-30 minutes</strong>.",
+                results: "Your score will be compared to age-matched norms (16–64 years). Results include a detailed PDF report.",
+                ageLabel: "Your Age",
+                genderLabel: "Gender (Optional)",
+                male: "Male",
+                female: "Female",
+                preferNot: "Prefer not to say",
+                startBtn: "Start Test",
+                questionOf: "Question",
+                prevBtn: "Previous",
+                nextBtn: "Next",
+                finishBtn: "Finish",
+                resultsTitle: "Your IQ Assessment Results",
+                downloadBtn: "Download PDF Report",
+                retakeBtn: "Retake Test",
+                aboutTest: "About This Test",
+                about1: "• 30 questions covering fluid intelligence (Raven-style), verbal, and numerical reasoning.",
+                about2: "• Normed against age-matched population (mean = 100, SD = 15).",
+                about3: "• Time limit: 25 minutes. Faster completion earns bonus points.",
+                about4: "• This is a screening tool. Professional assessment recommended for clinical use.",
+                generatedBy: "Generated by Standard IQ Web App | Not for diagnostic purposes",
+                interpretation: {
+                    gifted: "Gifted ({percentile}th percentile) – Top 2% of your age group.",
+                    verySuperior: "Very Superior ({percentile}th percentile) – Top 10%.",
+                    superior: "Superior ({percentile}th percentile) – Above average.",
+                    average: "Average ({percentile}th percentile) – Typical intelligence.",
+                    lowAverage: "Low Average ({percentile}th percentile) – Below average.",
+                    needsSupport: "Needs Support ({percentile}th percentile) – Consider professional evaluation."
+                }
             },
-            {
-                type: "pattern",
-                question: "Identify the missing piece in the sequence:",
-                options: ["A", "B", "C", "D", "E", "F"],
-                correct: 4,
-                difficulty: 1,
-                imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-2-1024x576.jpg.webp"
+            fr: {
+                title: "Évaluation Standard du QI",
+                welcome: "Bienvenue à un Test de QI Scientifiquement Valide",
+                description: "Ce test est basé sur les principes des Matrices Progressives de Raven et inclut des questions de raisonnement verbal, numérique et spatial. Il comprend <strong>30 questions</strong> et prend environ <strong>25-30 minutes</strong>.",
+                results: "Votre score sera comparé aux normes adaptées à votre âge (16–64 ans). Les résultats incluent un rapport PDF détaillé.",
+                ageLabel: "Votre Âge",
+                genderLabel: "Genre (Optionnel)",
+                male: "Homme",
+                female: "Femme",
+                preferNot: "Préfère ne pas dire",
+                startBtn: "Commencer le Test",
+                questionOf: "Question",
+                prevBtn: "Précédent",
+                nextBtn: "Suivant",
+                finishBtn: "Terminer",
+                resultsTitle: "Vos Résultats d'Évaluation du QI",
+                downloadBtn: "Télécharger le Rapport PDF",
+                retakeBtn: "Refaire le Test",
+                aboutTest: "À Propos de Ce Test",
+                about1: "• 30 questions couvrant l'intelligence fluide (style Raven), le raisonnement verbal et numérique.",
+                about2: "• Normalisé par rapport à la population correspondante à l'âge (moyenne = 100, écart-type = 15).",
+                about3: "• Limite de temps : 25 minutes. Une complétion plus rapide rapporte des points bonus.",
+                about4: "• Cet outil est un dépistage. Une évaluation professionnelle est recommandée pour un usage clinique.",
+                generatedBy: "Généré par l'Application Web Standard IQ | Pas à des fins diagnostiques",
+                interpretation: {
+                    gifted: "Surdoté ({percentile}e percentile) – Top 2% de votre groupe d'âge.",
+                    verySuperior: "Très Supérieur ({percentile}e percentile) – Top 10%.",
+                    superior: "Supérieur ({percentile}e percentile) – Au-dessus de la moyenne.",
+                    average: "Moyenne ({percentile}e percentile) – Intelligence typique.",
+                    lowAverage: "Inférieure à la Moyenne ({percentile}e percentile) – En dessous de la moyenne.",
+                    needsSupport: "Nécessite un Soutien ({percentile}e percentile) – Envisager une évaluation professionnelle."
+                }
             },
-            {
-                type: "pattern",
-                question: "What comes next in the series?",
-                options: ["A", "B", "C", "D", "E", "F"],
-                correct: 0,
-                difficulty: 2,
-                imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-3-1024x576.jpg.webp"
-            },
-            {
-                type: "pattern",
-                question: "Which option fits the empty cell?",
-                options: ["A", "B", "C", "D", "E", "F"],
-                correct: 3,
-                difficulty: 2,
-                imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-4-1024x576.jpg.webp"
-            },
-            {
-                type: "pattern",
-                question: "Complete the matrix:",
-                options: ["A", "B", "C", "D", "E", "F"],
-                correct: 1,
-                difficulty: 3,
-                imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-5-1024x576.jpg.webp"
-            },
-            {
-                type: "pattern",
-                question: "Find the correct rotation:",
-                options: ["A", "B", "C", "D", "E", "F"],
-                correct: 5,
-                difficulty: 3,
-                imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-6-1024x576.jpg.webp"
-            },
-            {
-                type: "pattern",
-                question: "Which shape is the odd one out?",
-                options: ["A", "B", "C", "D", "E", "F"],
-                correct: 2,
-                difficulty: 2,
-                imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-7-1024x576.jpg.webp"
-            },
-            {
-                type: "pattern",
-                question: "Continue the sequence:",
-                options: ["A", "B", "C", "D", "E", "F"],
-                correct: 4,
-                difficulty: 3,
-                imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-8-1024x576.jpg.webp"
-            },
-            {
-                type: "pattern",
-                question: "What is the relationship between the figures?",
-                options: ["A", "B", "C", "D", "E", "F"],
-                correct: 0,
-                difficulty: 4,
-                imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-9-1024x576.jpg.webp"
-            },
-            {
-                type: "pattern",
-                question: "Select the correct transformation:",
-                options: ["A", "B", "C", "D", "E", "F"],
-                correct: 3,
-                difficulty: 4,
-                imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-10-1024x576.jpg.webp"
-            },
-
-            // Verbal (11-20)
-            {
-                type: "verbal",
-                question: "Which word is most opposite to 'ephemeral'?",
-                options: ["Fleeting", "Transient", "Permanent", "Momentary", "Brief"],
-                correct: 2,
-                difficulty: 2,
-                imageUrl: null
-            },
-            {
-                type: "verbal",
-                question: "'Doctor' is to 'Patient' as 'Teacher' is to:",
-                options: ["Book", "School", "Student", "Classroom", "Lesson"],
-                correct: 2,
-                difficulty: 1,
-                imageUrl: null
-            },
-            {
-                type: "verbal",
-                question: "Which word does not belong?",
-                options: ["Apple", "Banana", "Carrot", "Orange", "Grape"],
-                correct: 2,
-                difficulty: 1,
-                imageUrl: null
-            },
-            {
-                type: "verbal",
-                question: "If 'CAT' = 24, 'DOG' = 26, then 'BIRD' = ?",
-                options: ["28", "30", "32", "34", "36"],
-                correct: 1,
-                difficulty: 3,
-                imageUrl: null
-            },
-            {
-                type: "verbal",
-                question: "Synonym of 'ubiquitous':",
-                options: ["Rare", "Omnipresent", "Hidden", "Scarce", "Limited"],
-                correct: 1,
-                difficulty: 3,
-                imageUrl: null
-            },
-            {
-                type: "verbal",
-                question: "Complete: 'Pen is to write as knife is to:'",
-                options: ["Cut", "Eat", "Cook", "Sharpen", "Hold"],
-                correct: 0,
-                difficulty: 1,
-                imageUrl: null
-            },
-            {
-                type: "verbal",
-                question: "Which is a type of 'fallacy'?",
-                options: ["Ad hominem", "Metaphor", "Hyperbole", "Alliteration"],
-                correct: 0,
-                difficulty: 4,
-                imageUrl: null
-            },
-            {
-                type: "verbal",
-                question: "What does 'oxymoron' mean?",
-                options: ["Sharp dullness", "Wise fool", "Jumbo shrimp", "All of the above"],
-                correct: 3,
-                difficulty: 3,
-                imageUrl: null
-            },
-            {
-                type: "verbal",
-                question: "If all Bloops are Razzies and all Razzies are Lazzies, then:",
-                options: ["All Bloops are Lazzies", "Some Bloops are not Lazzies", "No Bloops are Razzies", "None"],
-                correct: 0,
-                difficulty: 4,
-                imageUrl: null
-            },
-            {
-                type: "verbal",
-                question: "Antonym of 'ameliorate':",
-                options: ["Improve", "Enhance", "Worsen", "Better", "Refine"],
-                correct: 2,
-                difficulty: 3,
-                imageUrl: null
-            },
-
-            // Numerical (21-30)
-            {
-                type: "numerical",
-                question: "What is next: 2, 6, 12, 20, 30, ?",
-                options: ["42", "40", "44", "36", "50"],
-                correct: 0,
-                difficulty: 2,
-                imageUrl: null
-            },
-            {
-                type: "numerical",
-                question: "If 5 workers build 5 walls in 5 days, how many days for 10 workers to build 20 walls?",
-                options: ["5", "10", "20", "2.5", "4"],
-                correct: 0,
-                difficulty: 3,
-                imageUrl: null
-            },
-            {
-                type: "numerical",
-                question: "Solve: (3³ + 5²) ÷ 4 = ?",
-                options: ["13", "14", "12.5", "13.25", "14.5"],
-                correct: 1,
-                difficulty: 2,
-                imageUrl: null
-            },
-            {
-                type: "numerical",
-                question: "A train leaves at 2:15 PM and arrives at 5:45 PM. How long was the trip?",
-                options: ["3h 30m", "3h 15m", "4h", "3h 45m", "2h 30m"],
-                correct: 0,
-                difficulty: 1,
-                imageUrl: null
-            },
-            {
-                type: "numerical",
-                question: "What is 15% of 80?",
-                options: ["10", "12", "15", "18", "20"],
-                correct: 1,
-                difficulty: 1,
-                imageUrl: null
-            },
-            {
-                type: "numerical",
-                question: "If x + y = 12 and x - y = 4, then x = ?",
-                options: ["6", "8", "7", "5", "9"],
-                correct: 1,
-                difficulty: 3,
-                imageUrl: null
-            },
-            {
-                type: "numerical",
-                question: "Find the missing number: 1, 4, 9, 16, 25, ?, 49",
-                options: ["30", "36", "32", "35", "40"],
-                correct: 1,
-                difficulty: 1,
-                imageUrl: null
-            },
-            {
-                type: "numerical",
-                question: "A clock shows 3:15. What is the angle between hands?",
-                options: ["0°", "7.5°", "22.5°", "52.5°", "97.5°"],
-                correct: 1,
-                difficulty: 4,
-                imageUrl: null
-            },
-            {
-                type: "numerical",
-                question: "If a shirt costs $40 after 20% discount, original price?",
-                options: ["$48", "$50", "$52", "$45", "$60"],
-                correct: 1,
-                difficulty: 3,
-                imageUrl: null
-            },
-            {
-                type: "numerical",
-                question: "What is the median of: 3, 7, 2, 9, 1, 8, 4?",
-                options: ["4", "5", "6", "7", "3"],
-                correct: 1,
-                difficulty: 2,
-                imageUrl: null
+            ar: {
+                title: "تقييم الذكاء القياسي",
+                welcome: "مرحباً بك في اختبار ذكاء علمي موثوق",
+                description: "يعتمد هذا الاختبار على مبادئ مصفوفات رافن التدريجية ويتضمن أسئلة في التفكير اللفظي والعددي والمكاني. يتكون من <strong>30 سؤالاً</strong> ويستغرق حوالي <strong>25-30 دقيقة</strong>.",
+                results: "سيتم مقارنة درجتك بالمعايير المطابقة للعمر (16–64 سنة). تشمل النتائج تقريراً مفصلاً بصيغة PDF.",
+                ageLabel: "عمرك",
+                genderLabel: "الجنس (اختياري)",
+                male: "ذكر",
+                female: "أنثى",
+                preferNot: "أفضل عدم الإفصاح",
+                startBtn: "ابدأ الاختبار",
+                questionOf: "سؤال",
+                prevBtn: "السابق",
+                nextBtn: "التالي",
+                finishBtn: "إنهاء",
+                resultsTitle: "نتائج تقييم الذكاء الخاص بك",
+                downloadBtn: "تحميل تقرير PDF",
+                retakeBtn: "إعادة الاختبار",
+                aboutTest: "حول هذا الاختبار",
+                about1: "• 30 سؤالاً تغطي الذكاء السائل (أسلوب رافن)، والتفكير اللفظي والعددي.",
+                about2: "• معياري حسب الفئة العمرية (المتوسط = 100، الانحراف المعياري = 15).",
+                about3: "• حد زمني: 25 دقيقة. الإكمال الأسرع يكسب نقاط إضافية.",
+                about4: "• هذه أداة فحص. يُوصى بتقييم مهني للاستخدام السريري.",
+                generatedBy: "تم إنشاؤه بواسطة تطبيق الويب القياسي للذكاء | ليس لأغراض التشخيص",
+                interpretation: {
+                    gifted: "موهوب ({percentile} percentile) – أعلى 2% في فئتك العمرية.",
+                    verySuperior: "متفوق جداً ({percentile} percentile) – أعلى 10%.",
+                    superior: "متفوق ({percentile} percentile) – فوق المتوسط.",
+                    average: "متوسط ({percentile} percentile) – ذكاء نمطي.",
+                    lowAverage: "أقل من المتوسط ({percentile} percentile) – دون المتوسط.",
+                    needsSupport: "يحتاج دعماً ({percentile} percentile) – يُنصح بتقييم مهني."
+                }
             }
-        ];
-
-        // Age-based IQ norms (mean = 100, SD = 15)
-        const ageNorms = {
-            "16-17": { mean: 100, sd: 15 },
-            "18-24": { mean: 100, sd: 15 },
-            "25-34": { mean: 100, sd: 15 },
-            "35-44": { mean: 98,  sd: 14 },
-            "45-54": { mean: 96,  sd: 14 },
-            "55-64": { mean: 94,  sd: 13 }
         };
 
+        // Questions in multiple languages
+        const questions = {
+            en: [
+                // Pattern (1-10) - same images, English text
+                { type: "pattern", question: "Which figure completes the pattern?", options: ["A", "B", "C", "D", "E", "F"], correct: 2, difficulty: 1, imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-1-1024x576.jpg.webp" },
+                { type: "pattern", question: "Identify the missing piece in the sequence:", options: ["A", "B", "C", "D", "E", "F"], correct: 4, difficulty: 1, imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-2-1024x576.jpg.webp" },
+                { type: "pattern", question: "What comes next in the series?", options: ["A", "B", "C", "D", "E", "F"], correct: 0, difficulty: 2, imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-3-1024x576.jpg.webp" },
+                { type: "pattern", question: "Which option fits the empty cell?", options: ["A", "B", "C", "D", "E", "F"], correct: 3, difficulty: 2, imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-4-1024x576.jpg.webp" },
+                { type: "pattern", question: "Complete the matrix:", options: ["A", "B", "C", "D", "E", "F"], correct: 1, difficulty: 3, imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-5-1024x576.jpg.webp" },
+                { type: "pattern", question: "Find the correct rotation:", options: ["A", "B", "C", "D", "E", "F"], correct: 5, difficulty: 3, imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-6-1024x576.jpg.webp" },
+                { type: "pattern", question: "Which shape is the odd one out?", options: ["A", "B", "C", "D", "E", "F"], correct: 2, difficulty: 2, imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-7-1024x576.jpg.webp" },
+                { type: "pattern", question: "Continue the sequence:", options: ["A", "B", "C", "D", "E", "F"], correct: 4, difficulty: 3, imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-8-1024x576.jpg.webp" },
+                { type: "pattern", question: "What is the relationship between the figures?", options: ["A", "B", "C", "D", "E", "F"], correct: 0, difficulty: 4, imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-9-1024x576.jpg.webp" },
+                { type: "pattern", question: "Select the correct transformation:", options: ["A", "B", "C", "D", "E", "F"], correct: 3, difficulty: 4, imageUrl: "https://www.iprep.online/wp-content/uploads/2025/05/Raven-Sample-10-1024x576.jpg.webp" },
+                // Verbal
+                { type: "verbal", question: "Which word is most opposite to 'ephemeral'?", options: ["Fleeting", "Transient", "Permanent", "Momentary", "Brief"], correct: 2, difficulty: 2, imageUrl: null },
+                { type: "verbal", question: "'Doctor' is to 'Patient' as 'Teacher' is to:", options: ["Book", "School", "Student", "Classroom", "Lesson"], correct: 2, difficulty: 1, imageUrl: null },
+                { type: "verbal", question: "Which word does not belong?", options: ["Apple", "Banana", "Carrot", "Orange", "Grape"], correct: 2, difficulty: 1, imageUrl: null },
+                { type: "verbal", question: "If 'CAT' = 24, 'DOG' = 26, then 'BIRD' = ?", options: ["28", "30", "32", "34", "36"], correct: 1, difficulty: 3, imageUrl: null },
+                { type: "verbal", question: "Synonym of 'ubiquitous':", options: ["Rare", "Omnipresent", "Hidden", "Scarce", "Limited"], correct: 1, difficulty: 3, imageUrl: null },
+                { type: "verbal", question: "Complete: 'Pen is to write as knife is to:'", options: ["Cut", "Eat", "Cook", "Sharpen", "Hold"], correct: 0, difficulty: 1, imageUrl: null },
+                { type: "verbal", question: "Which is a type of 'fallacy'?", options: ["Ad hominem", "Metaphor", "Hyperbole", "Alliteration"], correct: 0, difficulty: 4, imageUrl: null },
+                { type: "verbal", question: "What does 'oxymoron' mean?", options: ["Sharp dullness", "Wise fool", "Jumbo shrimp", "All of the above"], correct: 3, difficulty: 3, imageUrl: null },
+                { type: "verbal", question: "If all Bloops are Razzies and all Razzies are Lazzies, then:", options: ["All Bloops are Lazzies", "Some Bloops are not Lazzies", "No Bloops are Razzies", "None"], correct: 0, difficulty: 4, imageUrl: null },
+                { type: "verbal", question: "Antonym of 'ameliorate':", options: ["Improve", "Enhance", "Worsen", "Better", "Refine"], correct: 2, difficulty: 3, imageUrl: null },
+                // Numerical
+                { type: "numerical", question: "What is next: 2, 6, 12, 20, 30, ?", options: ["42", "40", "44", "36", "50"], correct: 0, difficulty: 2, imageUrl: null },
+                { type: "numerical", question: "If 5 workers build 5 walls in 5 days, how many days for 10 workers to build 20 walls?", options: ["5", "10", "20", "2.5", "4"], correct: 0, difficulty: 3, imageUrl: null },
+                { type: "numerical", question: "Solve: (3³ + 5²) ÷ 4 = ?", options: ["13", "14", "12.5", "13.25", "14.5"], correct: 1, difficulty: 2, imageUrl: null },
+                { type: "numerical", question: "A train leaves at 2:15 PM and arrives at 5:45 PM. How long was the trip?", options: ["3h 30m", "3h 15m", "4h", "3h 45m", "2h 30m"], correct: 0, difficulty: 1, imageUrl: null },
+                { type: "numerical", question: "What is 15% of 80?", options: ["10", "12", "15", "18", "20"], correct: 1, difficulty: 1, imageUrl: null },
+                { type: "numerical", question: "If x + y = 12 and x - y = 4, then x = ?", options: ["6", "8", "7", "5", "9"], correct: 1, difficulty: 3, imageUrl: null },
+                { type: "numerical", question: "Find the missing number: 1, 4, 9, 16, 25, ?, 49", options: ["30", "36", "32", "35", "40"], correct: 1, difficulty: 1, imageUrl: null },
+                { type: "numerical", question: "A clock shows 3:15. What is the angle between hands?", options: ["0°", "7.5°", "22.5°", "52.5°", "97.5°"], correct: 1, difficulty: 4, imageUrl: null },
+                { type: "numerical", question: "If a shirt costs $40 after 20% discount, original price?", options: ["$48", "$50", "$52", "$45", "$60"], correct: 1, difficulty: 3, imageUrl: null },
+                { type: "numerical", question: "What is the median of: 3, 7, 2, 9, 1, 8, 4?", options: ["4", "5", "6", "7", "3"], correct: 1, difficulty: 2, imageUrl: null }
+            ],
+            fr: [
+                // Pattern questions remain in English (visual)
+                ...Array(10).fill().map((_, i) => ({
+                    ...questions.en[i],
+                    question: questions.en[i].question // Keep English for patterns
+                })),
+                // Verbal
+                { type: "verbal", question: "Quel mot est le plus opposé à 'éphémère' ?", options: ["Fugace", "Transitoire", "Permanent", "Momentané", "Bref"], correct: 2, difficulty: 2, imageUrl: null },
+                { type: "verbal", question: "'Docteur' est à 'Patient' ce que 'Professeur' est à :", options: ["Livre", "École", "Étudiant", "Classe", "Leçon"], correct: 2, difficulty: 1, imageUrl: null },
+                { type: "verbal", question: "Quel mot ne correspond pas ?", options: ["Pomme", "Banane", "Carotte", "Orange", "Raisin"], correct: 2, difficulty: 1, imageUrl: null },
+                { type: "verbal", question: "Si 'CHAT' = 24, 'CHIEN' = 26, alors 'OISEAU' = ?", options: ["28", "30", "32", "34", "36"], correct: 1, difficulty: 3, imageUrl: null },
+                { type: "verbal", question: "Synonyme de 'ubiquitaire' :", options: ["Rare", "Omniprésent", "Caché", "Raréfié", "Limité"], correct: 1, difficulty: 3, imageUrl: null },
+                { type: "verbal", question: "Complétez : 'Stylo est à écrire comme couteau est à :'", options: ["Couper", "Manger", "Cuisiner", "Aiguiser", "Tenir"], correct: 0, difficulty: 1, imageUrl: null },
+                { type: "verbal", question: "Quel est un type de 'sophisme' ?", options: ["Ad hominem", "Métaphore", "Hyperbole", "Allitération"], correct: 0, difficulty: 4, imageUrl: null },
+                { type: "verbal", question: "Que signifie 'oxymore' ?", options: ["Aiguille émoussée", "Fou sage", "Crevette géante", "Tous les précédents"], correct: 3, difficulty: 3, imageUrl: null },
+                { type: "verbal", question: "Si tous les Bloops sont des Razzies et tous les Razzies sont des Lazzies, alors :", options: ["Tous les Bloops sont des Lazzies", "Certains Bloops ne sont pas des Lazzies", "Aucun Bloop n'est un Razzie", "Aucun"], correct: 0, difficulty: 4, imageUrl: null },
+                { type: "verbal", question: "Antonyme de 'améliorer' :", options: ["Améliorer", "Renforcer", "Aggraver", "Perfectionner", "Raffiner"], correct: 2, difficulty: 3, imageUrl: null },
+                // Numerical (same as English)
+                ...questions.en.slice(20)
+            ],
+            ar: [
+                // Pattern questions remain in English (visual)
+                ...Array(10).fill().map((_, i) => ({
+                    ...questions.en[i],
+                    question: questions.en[i].question
+                })),
+                // Verbal
+                { type: "verbal", question: "أي كلمة هي الأكثر عكساً لكلمة 'زائل'؟", options: ["عابر", "مؤقت", "دائم", "لحظي", "قصير"], correct: 2, difficulty: 2, imageUrl: null },
+                { type: "verbal", question: "'الطبيب' لـ 'المريض' كما 'المعلم' لـ:", options: ["كتاب", "مدرسة", "طالب", "فصل", "درس"], correct: 2, difficulty: 1, imageUrl: null },
+                { type: "verbal", question: "أي كلمة لا تنتمي؟", options: ["تفاحة", "موز", "جزر", "برتقال", "عنب"], correct: 2, difficulty: 1, imageUrl: null },
+                { type: "verbal", question: "إذا كان 'قط' = 24، 'كلب' = 26، فإن 'طائر' = ؟", options: ["28", "30", "32", "34", "36"], correct: 1, difficulty: 3, imageUrl: null },
+                { type: "verbal", question: "مرادف 'منتشر في كل مكان':", options: ["نادر", "موجود في كل مكان", "مخفي", "قليل", "محدود"], correct: 1, difficulty: 3, imageUrl: null },
+                { type: "verbal", question: "أكمل: 'القلم للكتابة كما السكين لـ:'", options: ["القطع", "الأكل", "الطهي", "الشحذ", "الإمساك"], correct: 0, difficulty: 1, imageUrl: null },
+                { type: "verbal", question: "أي منها نوع من 'المغالطة'؟", options: ["الشخصنة", "الاستعارة", "المبالغة", "التكرار الصوتي"], correct: 0, difficulty: 4, imageUrl: null },
+                { type: "verbal", question: "ماذا يعني 'التناقض اللفظي'؟", options: ["حدة البلادة", "أحمق حكيم", "جمبري عملاق", "كل ما سبق"], correct: 3, difficulty: 3, imageUrl: null },
+                { type: "verbal", question: "إذا كان كل البلوبس رازيس وكل الرازيس لازيس، فإن:", options: ["كل البلوبس لازيس", "بعض البلوبس ليسوا لازيس", "لا يوجد بلوبس رازيس", "لا شيء"], correct: 0, difficulty: 4, imageUrl: null },
+                { type: "verbal", question: "ضد كلمة 'تحسين':", options: ["تحسين", "تعزيز", "تفاقم", "تطوير", "تنقية"], correct: 2, difficulty: 3, imageUrl: null },
+                // Numerical (same as English)
+                ...questions.en.slice(20)
+            ]
+        };
+
+        let currentLang = 'en';
         let currentQuestion = 0;
-        let answers = new Array(questions.length).fill(null);
+        let answers = new Array(30).fill(null);
         let startTime, timerInterval;
         let userAge = null;
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang;
+            document.body.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+            updateTranslations();
+            if (document.getElementById('testScreen').classList.contains('hidden') === false) {
+                showQuestion(currentQuestion);
+            }
+        }
+
+        function updateTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                const text = getTranslation(key);
+                if (text) {
+                    el.innerHTML = text;
+                }
+            });
+            document.getElementById('nextBtn').textContent = currentQuestion === 29 ? getTranslation('finishBtn') : getTranslation('nextBtn');
+        }
+
+        function getTranslation(key) {
+            const keys = key.split('.');
+            let value = translations[currentLang];
+            for (const k of keys) {
+                value = value[k];
+                if (!value) return key;
+            }
+            return typeof value === 'string' ? value : key;
+        }
 
         function startTest() {
             userAge = parseInt(document.getElementById('age').value);
             if (!userAge || userAge < 16 || userAge > 64) {
-                alert("Please enter a valid age between 16 and 64.");
+                alert(currentLang === 'ar' ? "الرجاء إدخال عمر صحيح بين 16 و64." : currentLang === 'fr' ? "Veuillez entrer un âge valide entre 16 et 64." : "Please enter a valid age between 16 and 64.");
                 return;
             }
             document.getElementById('welcomeScreen').classList.add('hidden');
@@ -438,7 +419,7 @@
 
         function updateTimer() {
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const minutes = String(Math.floor((1500 - elapsed) / 60)).padStart(2, '0'); // Changed to 25:00 as per timer id
+            const minutes = String(Math.floor((1500 - elapsed) / 60)).padStart(2, '0');
             const seconds = String((1500 - elapsed) % 60).padStart(2, '0');
             document.getElementById('timer').textContent = `${minutes}:${seconds}`;
             if (elapsed >= 1500) {
@@ -449,14 +430,14 @@
 
         function showQuestion(index) {
             currentQuestion = index;
-            const q = questions[index];
+            const q = questions[currentLang][index];
             document.getElementById('currentQ').textContent = index + 1;
             document.getElementById('questionText').textContent = q.question;
 
-            const progress = ((index + 1) / questions.length) * 100;
+            const progress = ((index + 1) / 30) * 100;
             document.getElementById('progressBar').style.width = `${progress}%`;
 
-            document.getElementById('questionImage').innerHTML = q.imageUrl ? `<img src="${q.imageUrl}" class="img-fluid question-image" alt="Question Pattern">` : '';
+            document.getElementById('questionImage').innerHTML = q.imageUrl ? `<img src="${q.imageUrl}" class="img-fluid question-image" alt="${getTranslation('questionOf')} Pattern">` : '';
 
             const optionsContainer = document.getElementById('optionsContainer');
             optionsContainer.innerHTML = '';
@@ -471,7 +452,7 @@
             });
 
             document.getElementById('prevBtn').disabled = index === 0;
-            document.getElementById('nextBtn').textContent = index === questions.length - 1 ? 'Finish' : 'Next';
+            document.getElementById('nextBtn').textContent = index === 29 ? getTranslation('finishBtn') : getTranslation('nextBtn');
         }
 
         function selectOption(qIndex, optIndex, btn) {
@@ -485,7 +466,7 @@
         }
 
         function nextQuestion() {
-            if (currentQuestion < questions.length - 1) {
+            if (currentQuestion < 29) {
                 showQuestion(currentQuestion + 1);
             } else {
                 finishTest();
@@ -497,47 +478,40 @@
             document.getElementById('testScreen').classList.add('hidden');
             document.getElementById('resultScreen').classList.remove('hidden');
 
-            // Calculate raw score
             let correct = 0;
-            let difficultyWeighted = 0;
-            let totalWeight = 0;
-
             answers.forEach((ans, i) => {
-                if (ans === questions[i].correct) {
-                    correct++;
-                    const weight = questions[i].difficulty || 1;
-                    difficultyWeighted += weight;
-                    totalWeight += weight;
-                } else if (ans !== null) {
-                    totalWeight += (questions[i].difficulty || 1);
-                }
+                if (ans === questions[currentLang][i].correct) correct++;
             });
 
-            // Adaptive scaling: raw score + time bonus + difficulty adjustment
             const timeTaken = (Date.now() - startTime) / 1000;
-            const timeBonus = Math.max(0, 1500 - timeTaken) / 60; // Adjusted for 25 min
+            const timeBonus = Math.max(0, 1500 - timeTaken) / 60;
             const rawScore = correct + timeBonus * 0.5;
 
-            // Convert to IQ (normed by age)
             const ageGroup = getAgeGroup(userAge);
             const norm = ageNorms[ageGroup];
-            const z = (rawScore - 15) / 5; // Mean raw ~15, SD ~5
+            const z = (rawScore - 15) / 5;
             const iq = Math.round(norm.mean + z * norm.sd);
-
-            // Clamp IQ
             const finalIQ = Math.max(70, Math.min(145, iq));
-
-            // Percentile
             const percentile = Math.round(100 * norm.cdf((finalIQ - norm.mean) / norm.sd));
 
-            // Display
             document.getElementById('iqScore').textContent = finalIQ;
-            document.getElementById('percentileText').textContent = `${percentile}th percentile`;
-            document.getElementById('interpretation').textContent = getInterpretation(finalIQ, percentile);
+            document.getElementById('percentileText').innerHTML = `${percentile}${getTranslation('interpretation').includes('percentile') ? '' : 'th'} percentile`;
 
-            // Store for PDF
-            window.testResults = { iq: finalIQ, percentile, age: userAge, raw: correct, total: questions.length };
+            const interpKey = finalIQ >= 130 ? 'gifted' : finalIQ >= 120 ? 'verySuperior' : finalIQ >= 110 ? 'superior' : finalIQ >= 90 ? 'average' : finalIQ >= 80 ? 'lowAverage' : 'needsSupport';
+            const interp = translations[currentLang].interpretation[interpKey].replace('{percentile}', percentile);
+            document.getElementById('interpretation').textContent = interp;
+
+            window.testResults = { iq: finalIQ, percentile, age: userAge, raw: correct, total: 30, lang: currentLang };
         }
+
+        const ageNorms = {
+            "16-17": { mean: 100, sd: 15 },
+            "18-24": { mean: 100, sd: 15 },
+            "25-34": { mean: 100, sd: 15 },
+            "35-44": { mean: 98,  sd: 14 },
+            "45-54": { mean: 96,  sd: 14 },
+            "55-64": { mean: 94,  sd: 13 }
+        };
 
         function getAgeGroup(age) {
             if (age <= 17) return "16-17";
@@ -548,7 +522,6 @@
             return "55-64";
         }
 
-        // Add CDF approximation for normal distribution
         Object.keys(ageNorms).forEach(k => {
             ageNorms[k].cdf = function(z) {
                 if (z < -4) return 0;
@@ -560,31 +533,20 @@
             };
         });
 
-        function getInterpretation(iq, percentile) {
-            if (iq >= 130) return `Gifted (${percentile}th percentile) – Top 2% of your age group.`;
-            if (iq >= 120) return `Very Superior (${percentile}th percentile) – Top 10%.`;
-            if (iq >= 110) return `Superior (${percentile}th percentile) – Above average.`;
-            if (iq >= 90) return `Average (${percentile}th percentile) – Typical intelligence.`;
-            if (iq >= 80) return `Low Average (${percentile}th percentile) – Below average.`;
-            return `Needs Support (${percentile}th percentile) – Consider professional evaluation.`;
-        }
-
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
+            const t = translations[currentLang];
 
-            // Header
             doc.setFontSize(20);
             doc.setTextColor(67, 97, 238);
-            doc.text("IQ Assessment Report", 105, 20, { align: "center" });
+            doc.text(t.title, 105, 20, { align: "center" });
 
-            // Info
             doc.setFontSize(12);
             doc.setTextColor(0);
-            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 40);
-            doc.text(`Age: ${window.testResults.age} years`, 20, 48);
+            doc.text(`${new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : currentLang === 'fr' ? 'fr-FR' : 'en-US')}`, 20, 40);
+            doc.text(`${t.ageLabel}: ${window.testResults.age} ${currentLang === 'ar' ? 'سنة' : currentLang === 'fr' ? 'ans' : 'years'}`, 20, 48);
 
-            // Score
             doc.setFontSize(36);
             doc.setTextColor(67, 97, 238);
             doc.text(`${window.testResults.iq}`, 105, 75, { align: "center" });
@@ -594,29 +556,20 @@
             doc.text("IQ Score", 105, 85, { align: "center" });
             doc.text(`${window.testResults.percentile}th Percentile`, 105, 95, { align: "center" });
 
-            // Interpretation
             doc.setFontSize(12);
-            const interp = getInterpretation(window.testResults.iq, window.testResults.percentile);
+            const interp = document.getElementById('interpretation').textContent;
             const lines = doc.splitTextToSize(interp, 170);
             doc.text(lines, 20, 115);
 
-            // Test Info
             doc.setFontSize(14);
             doc.setTextColor(0);
-            doc.text("About This Test", 20, 140);
+            doc.text(t.aboutTest, 20, 140);
             doc.setFontSize(11);
-            const info = [
-                "• 30 questions covering fluid intelligence (Raven-style), verbal, and numerical reasoning.",
-                "• Normed against age-matched population (mean = 100, SD = 15).",
-                "• Time limit: 25 minutes. Faster completion earns bonus points.",
-                "• This is a screening tool. Professional assessment recommended for clinical use."
-            ];
-            info.forEach((line, i) => doc.text(line, 20, 150 + i * 8));
+            [t.about1, t.about2, t.about3, t.about4].forEach((line, i) => doc.text(line, 20, 150 + i * 8));
 
-            // Footer
             doc.setFontSize(10);
             doc.setTextColor(150);
-            doc.text("Generated by Standard IQ Web App | Not for diagnostic purposes", 105, 280, { align: "center" });
+            doc.text(t.generatedBy, 105, 280, { align: "center" });
 
             doc.save(`IQ_Report_${new Date().toISOString().slice(0,10)}.pdf`);
         }
@@ -625,9 +578,8 @@
             location.reload();
         }
 
-        // Initialize
         document.addEventListener("DOMContentLoaded", () => {
-            // Preload first question options
+            changeLanguage('en');
         });
     </script>
 </body>
